@@ -58,16 +58,20 @@ SQUARE_NAMES = [f + r for r in RANK_NAMES for f in FILE_NAMES]
 
 
 class ComputerManager:
-    def compute_square(self, name: str) -> Square:
+    @staticmethod
+    def compute_square(name: str) -> Square:
         return SQUARE_NAMES.index(name)
 
-    def compute_square_name(self, sq: Square) -> str:
+    @staticmethod
+    def compute_square_name(sq: Square) -> str:
         return SQUARE_NAMES[sq]
 
-    def compute_rank(self, sq: Square) -> int:
+    @staticmethod
+    def compute_rank(sq: Square) -> int:
         return sq >> 3
 
-    def compute_file(self, sq: Square) -> int:
+    @staticmethod
+    def compute_file(sq: Square) -> int:
         return sq & 7
 
     def compute_distance(self, a: Square, b: Square) -> int:

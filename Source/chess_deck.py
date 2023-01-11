@@ -1,5 +1,5 @@
 from typing import Optional, List, Iterator, Set
-
+from fen_loader import FenLoader
 from bitboards import BitboardManager
 from computer import SQUARES, BB_EMPTY, BB_SQUARES, BB_RANK_1, BB_RANK_2, BB_RANK_7, BB_RANK_8, BB_CORNERS, BB_FILES, \
     BB_DIAG_MASK, BB_DIAG_ATTACK, BB_RANK_MASK, BB_RANK_ATTACK, BB_FILE_MASK, BB_FILE_ATTACK, BB_FILE_H, BB_FILE_A, \
@@ -35,9 +35,6 @@ class ChessDeck:
         self.white_deck = white_pieces_deck.white_pieces
         self.black_deck = black_pieces_deck.black_pieces
 
-        if fen is None:
-            self.reset_game()
-
         self.white_set = white_pieces_deck.get_set_pieces(WHITE)
         self.black_set = black_pieces_deck.get_set_pieces(BLACK)
 
@@ -47,7 +44,20 @@ class ChessDeck:
         self.piece_set = self.white_set.union(self.black_set)
         self.create_dict_attacks()
 
-        self.turn = WHITE
+        if fen is None:
+            self.reset_game()
+            self.turn = WHITE
+            self.halfmove_clock = 0
+            self.fullmove_number = 1
+        else:
+            fnl = FenLoader(fen, self.piece_set)
+            self.game = fnl.load_board()
+            self.turn = fnl.load_turn()
+            self.halfmove_clock = fnl.load_halfmove_clock()
+            self.fullmove_number = fnl.load_fullmove_number()
+
+
+
 
     def reset_game(self):
         """Resets the game and loads both decks"""
@@ -158,17 +168,16 @@ class ChessDeck:
                     yield move
 
     def is_safe(self, king_sq: Square, move: Move, blockers: Bitboard) -> bool:
+
         if move.from_sq == king_sq:
             if self.is_move_castling(move):
                 return True
             else:
                 return not self.is_square_attacked(move.to_sq, not self.turn)
-        elif self.is_move_take_en_passant(move):
-            return bool(not blockers & BB_SQUARES[move.from_sq] & self.is_ep_skewered(king_sq, move.from_sq))
+        elif self.is_the_move_a_en_passant(move):
+            return bool(not blockers & BB_SQUARES[move.from_sq]) and not self.is_ep_skewered(king_sq, move.from_sq)
         else:
-            return bool(
-                not blockers & BB_SQUARES[move.from_sq] or self.cpm.compute_ray(move.from_sq, move.to_sq) & BB_SQUARES[
-                    king_sq])
+            return bool(not blockers & BB_SQUARES[move.from_sq] or (self.cpm.compute_ray(move.from_sq, move.to_sq) & BB_SQUARES[king_sq]))
 
     def is_ep_skewered(self, king_sq: Square, capturer: Square) -> bool:
         last_move_sq = self.bbm.msb(self.game['En passant']) + (-8 if self.turn else 8)
@@ -181,6 +190,7 @@ class ChessDeck:
 
         if BB_RANK_ATTACK[king_sq][BB_RANK_MASK[king_sq] & occupancy] & horizontal_attackers:
             return True
+        return False
 
     def get_blockers(self, sq: Square, color: Color) -> Bitboard:
         """Get the blockers of a square, by seeing if the """
@@ -195,6 +205,7 @@ class ChessDeck:
                 snipers |= self.attacks[piece.name]['Vertical slide'][1][sq][0] & self.game[piece.name]
             if piece.diagonal_slide:
                 snipers |= self.attacks[piece.name]['Diagonal slide'][1][sq][0] & self.game[piece.name]
+        snipers = snipers & self.get_pieces_of_color(not color)
 
         for sniper in self.bbm.scan_reversed(snipers):
             between = self.cpm.compute_between(sniper, sq) & self.game['All']
@@ -205,26 +216,36 @@ class ChessDeck:
     def gen_scape_moves(self, attackers: Bitboard) -> Iterator[Move]:
         """Generates the scape moves of the king. It moves if there is any available square to scape that has no attackers,
         if it has only one attacker then see if it can be captured or a piece can be put in the middle if it has a slide attack."""
-        king_bb = self.game["King"]
-        king_sq = self.bbm.msb(king_bb)
+        king_bb = self.game["King"] & self.get_pieces_of_color(self.turn)
+        king_sq = self.get_king_square(self.turn)
         king_attacks = self.get_mask_attack(king_sq)
+        attacked_squares = self.get_attacked_squares_by_sliders(king_sq, attackers)
 
-        for square in self.bbm.scan_reversed(king_attacks & ~self.game["All"]):
-            if self.is_square_attacked(square, self.turn):
-                yield Move(king_sq, square)
+        for square in self.bbm.scan_reversed(king_attacks & ~self.get_pieces_of_color(self.turn) & ~attacked_squares):
+            yield Move(king_sq, square)
 
         if self.bbm.is_one_bit_on(attackers):
             attacker_sq = self.bbm.msb(attackers)
             attacker_name = self.get_type_at(attacker_sq)
             target_squares = BB_EMPTY
-            if "Diagonal slide" in self.attacks[attacker_name] or "Horizontal slide" in self.attacks[
-                attacker_name] or "Vertical slide" in self.attacks[attacker_name]:
+            if "Diagonal slide" in self.attacks[attacker_name] or "Horizontal slide" in self.attacks[attacker_name] or "Vertical slide" in self.attacks[attacker_name]:
                 target_squares = self.cpm.compute_between(attacker_sq, king_sq) | attackers
             elif "Step" in self.attacks[attacker_name] or "Steps" in self.attacks[attacker_name]:
                 target_squares |= attackers
 
             if target_squares:
                 yield from self.gen_pseudo_moves(~king_bb, target_squares)
+
+    def get_attacked_squares_by_sliders(self, king_sq: Square, attackers: Bitboard) -> Bitboard:
+        sliders = BB_EMPTY
+        for piece in self.get_set_of_color(not self.turn):
+            if piece.horizontal_slide or piece.vertical_slide or piece.diagonal_slide:
+                sliders |= self.game[piece.name]
+        attackers &= sliders
+        attacked = BB_EMPTY
+        for attacker in self.bbm.scan_reversed(attackers):
+            attacked |= self.cpm.compute_ray(attacker, king_sq) & ~self.game['All']
+        return attacked
 
     def gen_pseudo_moves(self, start_mask: Bitboard = BB_ALL, end_mask: Bitboard = BB_ALL) -> Iterator[Move]:
         """
@@ -407,6 +428,12 @@ class ChessDeck:
     def is_square_empty(self, sq: Square) -> bool:
         return self.get_type_at(sq) is None
 
+    def is_the_move_a_en_passant(self, move: Move) -> bool:
+        """
+        The is_the_move_a_en_passant function returns a boolean value of whether the next move would be an en passant move.
+        """
+        return bool(self.game['En passant'] & BB_SQUARES[move.to_sq]) & bool(BB_SQUARES[move.from_sq] & self.game['Pawn'])
+
     def is_bitboard_attacked(self, bb: Bitboard, color: Color) -> bool:
         """
         The is_bitboard_attacked function takes a bitboard and a color as arguments.
@@ -428,10 +455,10 @@ class ChessDeck:
             additional_move = self.get_additional_castling_move(move)
             self.apply_move(additional_move)
 
-        if self.is_move_can_be_en_passant(move):
+        if self.can_be_en_passanted(move):
             self.set_en_passant(move)
 
-        if self.is_move_take_en_passant(move):
+        if self.has_been_an_en_passant_capture(move):
             self.remove_piece_at(move.to_sq - 8 if self.turn is WHITE else move.to_sq + 8)
 
         if move.is_promotion():
@@ -444,11 +471,11 @@ class ChessDeck:
         """Checks if a move is a castling move"""
         return (self.get_type_at(move.to_sq) == 'King') & (self.cpm.compute_distance(move.from_sq, move.to_sq) == 2)
 
-    def is_move_can_be_en_passant(self, move: Move) -> bool:
+    def can_be_en_passanted(self, move: Move) -> bool:
         """Checks if a move generates an en passant opportunity"""
         return (self.get_type_at(move.to_sq) == 'Pawn') & (self.cpm.compute_distance(move.from_sq, move.to_sq) == 2)
 
-    def is_move_take_en_passant(self, move: Move) -> bool:
+    def has_been_an_en_passant_capture(self, move: Move) -> bool:
         """Checks if a move is an en passant take"""
         is_pawn_capture = (self.get_type_at(move.to_sq) == 'Pawn') & (not move.is_going_straight())
         return is_pawn_capture
@@ -519,7 +546,6 @@ class ChessDeck:
             for move in self.gen_legal_moves():
                 print(f"{move} ", end="")
             print("")
-
 
             command = input("Insert a move: ")
             filtered_command = command.replace(" ", "").lower()

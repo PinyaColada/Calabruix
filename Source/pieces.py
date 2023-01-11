@@ -3,6 +3,18 @@ Square = int
 Bitboard = int
 COLORS = [WHITE, BLACK] = [True, False]
 
+ALL_PIECES_DICT = {
+    "w": "Wall",
+    "n": "Knight",
+    "b": "Bishop",
+    "q": "Queen",
+    "k": "King",
+    "g": "Ghost",
+    "c": "Chancellor",
+    "r": "Rook",
+    "p": "Pawn"
+}
+
 
 class Piece:
     def __init__(self, color):
