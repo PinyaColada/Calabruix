@@ -78,11 +78,20 @@ class ComputerManager:
         return max(abs(self.compute_file(a) - self.compute_file(b)), abs(self.compute_rank(a) - self.compute_rank(b)))
 
     def compute_edges(self, sq: Square) -> Bitboard:
+        """
+        Returns a bitboard with the edges that a rook would go if the board was empty.
+        """
         edges = (((BB_RANK_1 | BB_RANK_8) & ~BB_RANKS[self.compute_rank(sq)] |
                   ((BB_FILE_A | BB_FILE_H) & ~BB_FILES[self.compute_file(sq)])))
         return edges
 
     def compute_sliding_attacks(self, square: Square, occupied: Bitboard, deltas: Iterable[int]) -> Bitboard:
+        """
+        The compute_sliding_attacks function takes a square and a bitboard of occupied squares as arguments.
+        It then iterates through the eight directions (north, northeast, etc.) in which pieces slide.
+        For each direction, it iterates through the squares that are one square away from the given square in that direction.
+        If the square is occupied it adds the attack and then breaks out of the loop.
+        """
         attacks = BB_EMPTY
         for delta in deltas:
             sq = square
@@ -98,9 +107,18 @@ class ComputerManager:
         return attacks
 
     def compute_step_attacks(self, square: Square, deltas: Iterable[int]) -> Bitboard:
+        """
+        It calls the compute_sliding_attacks function with a filled bitboard as the occupied squares.
+        This way it will do only one iteration of the slide.
+        """
         return self.compute_sliding_attacks(square, BB_ALL, deltas)
 
     def compute_mask_attack_table(self, deltas: List[int]) -> Tuple[List[Bitboard], List[Dict[Bitboard, Bitboard]]]:
+        """
+        The compute_mask_attack_table function computes a table of masks and attack tables.
+        The mask table is an array of bitboards, one for each square on the board.  The attack_table is also an array, but of dictionaries.
+        The key is a bitboard of occupied squares, and the value is the bitboard of attacks for that particular mask and occupied squares.
+        """
         mask_table = []
         attack_table = []
         for square in range(64):
@@ -115,6 +133,8 @@ class ComputerManager:
         return mask_table, attack_table
 
     def compute_gen_carry_rippler(self, mask: Bitboard) -> Iterator[Bitboard]:
+        """Carry rippler algorithm to traverse all subsets of a bitboard
+        More info at https://www.chessprogramming.org/Carry_Rippler"""
         subset = BB_EMPTY
         while True:
             yield subset
@@ -123,6 +143,9 @@ class ComputerManager:
                 break
 
     def compute_rays(self) -> List[List[Bitboard]]:
+        """
+        The compute_rays function computes the set of all rays, a ray being a set of squares that are on the same rank, file, or diagonal as a given square.
+        """
         ray_list = []
         for index_a, bb_a in enumerate(BB_SQUARES):
             rays_row = []
@@ -139,9 +162,11 @@ class ComputerManager:
         return ray_list
 
     def compute_ray(self, a: Square, b: Square) -> Bitboard:
+        """Return a ray from two squares, if they are on the same rank, file or diagonal"""
         return RAYS[a][b]
 
     def compute_between(self, a: Square, b: Square) -> Bitboard:
+        """The compute_between function computes the set of squares between two squares on the same rank, file, or diagonal."""
         bb = RAYS[a][b] & ((BB_ALL << a) ^ (BB_ALL << b))
         return bb & (bb - 1)
 

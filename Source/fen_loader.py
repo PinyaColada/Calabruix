@@ -1,5 +1,5 @@
 from typing import Dict, Set
-from pieces import ALL_PIECES_DICT
+from pieces import SYMBOL_TO_NAME
 from computer import BB_SQUARES, BB_EMPTY, ComputerManager
 import re
 
@@ -7,9 +7,10 @@ Bitboard = int
 
 
 class FenLoader:
-    def __init__(self, fen_string: str, set_pieces: Set = None):
+    def __init__(self, fen_string: str, set_pieces: Set, dict_attacks: Dict):
         fen = fen_string.split(" ")
         self.set_pieces = set_pieces
+        self.attacks = dict_attacks
         self.board = self.process_fen(fen[0])
         self.turn = fen[1]
         self.castling = fen[2]
@@ -19,13 +20,14 @@ class FenLoader:
 
     @staticmethod
     def process_fen(fen: str) -> str:
-        fen = re.sub(r'\d', lambda x: '1' * int(x.group()), fen)
-        fen = fen.split("/")[::-1]
-        fen = "".join(fen)
+        """It processes the fen string, so it's easier to process"""
+        fen = re.sub(r'\d', lambda x: '1' * int(x.group()), fen)  # Replace the numbers with their respective number of 1s
+        fen = fen.split("/")[::-1]  # Split by / and reverse the list
+        fen = "".join(fen)  # Join the list
         return fen
 
     def load_board(self) -> Dict:
-        board = {
+        board = {  # Each game state will always have this bitboards
             "White": BB_EMPTY,
             "Black": BB_EMPTY,
             "All": BB_EMPTY,
@@ -35,28 +37,32 @@ class FenLoader:
 
         for piece in self.set_pieces:
             board[piece.name] = BB_EMPTY
+            if piece.is_invincible:  # If the piece is invincible, the game state will have a bitboard for it
+                board["Invincible"] = BB_EMPTY
+            if not piece.can_capture:  # The same applied with the pieces that can't capture
+                board["Non capture"] = BB_EMPTY
 
-        skipping = 0
         for i, piece in enumerate(self.board):
-            if skipping > 0:
-                skipping -= 1
-                continue
-
             if piece.isdigit():
-                skipping += int(piece) - 1
                 continue
 
-            if piece.lower() not in ALL_PIECES_DICT:
+            if piece.lower() not in SYMBOL_TO_NAME:
                 continue
 
-            board[ALL_PIECES_DICT[piece.lower()]] |= BB_SQUARES[i]
+            piece_name = SYMBOL_TO_NAME[piece.lower()]
+            board[piece_name] |= BB_SQUARES[i]
 
             if piece.isupper():
                 board["White"] |= BB_SQUARES[i]
             else:
                 board["Black"] |= BB_SQUARES[i]
-
             board["All"] |= BB_SQUARES[i]
+
+            if self.attacks[piece_name]['Invincible']:
+                board["Invincible"] |= BB_SQUARES[i]
+
+            if self.attacks[piece_name]['Non capture']:
+                board["Non capture"] |= BB_SQUARES[i]
 
         if self.en_passant != "-":
             board["En Passant"] = BB_SQUARES[ComputerManager.compute_square(self.en_passant)]
