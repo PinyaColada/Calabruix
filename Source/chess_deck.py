@@ -248,7 +248,7 @@ class ChessDeck:
             return bool(not blockers & BB_SQUARES[move.from_sq]) and not self.is_ep_skewered(king_sq, move.from_sq)
         else:
             return bool(not blockers & BB_SQUARES[move.from_sq] or (
-                        self.cpm.compute_ray(move.from_sq, move.to_sq) & BB_SQUARES[king_sq]))
+                    self.cpm.compute_ray(move.from_sq, move.to_sq) & BB_SQUARES[king_sq]))
 
     def is_square_empty(self, sq: Square) -> bool:
         return self.get_type_at(sq) is None
@@ -257,8 +257,7 @@ class ChessDeck:
         """
         The is_the_move_a_en_passant function returns a boolean value of whether the next move would be an en passant move.
         """
-        return bool(self.game['En passant'] & BB_SQUARES[move.to_sq]) & bool(
-            BB_SQUARES[move.from_sq] & self.game['Pawn'])
+        return bool(self.game['En passant'] & BB_SQUARES[move.to_sq]) & bool(BB_SQUARES[move.from_sq] & self.game['Pawn'])
 
     def is_bitboard_attacked(self, bb: Bitboard, color: Color) -> bool:
         """
@@ -329,8 +328,7 @@ class ChessDeck:
             attacker_sq = self.bbm.msb(attackers)
             attacker_name = self.get_type_at(attacker_sq)
             target_squares = BB_EMPTY
-            if "Diagonal slide" in self.attacks[attacker_name] or "Horizontal slide" in self.attacks[
-                attacker_name] or "Vertical slide" in self.attacks[attacker_name]:
+            if "Diagonal slide" in self.attacks[attacker_name] or "Horizontal slide" in self.attacks[attacker_name] or "Vertical slide" in self.attacks[attacker_name]:
                 target_squares = self.cpm.compute_between(attacker_sq, king_sq) | attackers
             elif "Step" in self.attacks[attacker_name] or "Steps" in self.attacks[attacker_name]:
                 target_squares |= attackers
