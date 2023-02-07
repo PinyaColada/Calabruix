@@ -55,6 +55,7 @@ BB_RANKS = [
 FILE_NAMES = ["a", "b", "c", "d", "e", "f", "g", "h"]
 RANK_NAMES = ["1", "2", "3", "4", "5", "6", "7", "8"]
 SQUARE_NAMES = [f + r for r in RANK_NAMES for f in FILE_NAMES]
+BB_PROMOTION_RANKS = BB_RANK_1 | BB_RANK_8
 
 
 class ComputerManager:

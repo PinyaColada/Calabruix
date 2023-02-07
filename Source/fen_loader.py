@@ -32,15 +32,13 @@ class FenLoader:
             "Black": BB_EMPTY,
             "All": BB_EMPTY,
             "En passant": BB_EMPTY,
-            "Castling": BB_EMPTY
+            "Castling": BB_EMPTY,
+            "Invincible": BB_EMPTY,
+            "Non capture": BB_EMPTY
         }
 
         for piece in self.set_pieces:
             board[piece.name] = BB_EMPTY
-            if piece.is_invincible:  # If the piece is invincible, the game state will have a bitboard for it
-                board["Invincible"] = BB_EMPTY
-            if not piece.can_capture:  # The same applied with the pieces that can't capture
-                board["Non capture"] = BB_EMPTY
 
         for i, piece in enumerate(self.board):
             if piece.isdigit():

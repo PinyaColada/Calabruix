@@ -10,9 +10,14 @@ Color = bool
 
 
 class Deck:
-    def __init__(self, white_pieces: List[Optional[Piece]] = None, black_pieces: List[Optional[Piece]] = None):
-        self.white_pieces = self.create_random_deck(WHITE)
-        self.black_pieces = self.create_random_deck(BLACK)
+    def __init__(self, white_pieces: List[Optional[Piece]] = None, black_pieces: List[Optional[Piece]] = None, normal_chess_deck: bool = False, knook_deck: bool = False):
+        if normal_chess_deck:
+            self.normal_chess_deck()
+        elif knook_deck:
+            self.knook_deck()
+        else:
+            self.white_pieces = white_pieces
+            self.black_pieces = black_pieces
 
     def get_deck(self, color: Color) -> List[Optional[Piece]]:
         return self.white_pieces if color is WHITE else self.black_pieces
@@ -23,16 +28,23 @@ class Deck:
         set_pieces.discard(None)
         return set_pieces
 
-    def get_prom_pieces(self, color: Color) -> Set:
+    def get_prom_piece(self, color: Color) -> Piece:
         """Get all the pieces that a pawn can be promoted from the deck"""
-        set_pieces = set(self.white_pieces) if color is WHITE else set(self.black_pieces)
-        set_pieces.discard(King(WHITE) if color is WHITE else King(BLACK))
-        set_pieces.discard(None)
-        return {piece for piece in set_pieces if piece.can_be_promotion}
+        return self.get_deck(color)[3]
 
     def weight_deck(self, color: Color) -> int:
         """Return how many points have been used with the deck"""
         return sum(piece.price for piece in self.get_deck(color))
+
+    def normal_chess_deck(self):
+        """Create a normal chess deck"""
+        self.white_pieces = [Rook(WHITE), Knight(WHITE), Bishop(WHITE), Queen(WHITE), King(WHITE), Bishop(WHITE), Knight(WHITE), Rook(WHITE)]
+        self.black_pieces = [Rook(BLACK), Knight(BLACK), Bishop(BLACK), Queen(BLACK), King(BLACK), Bishop(BLACK), Knight(BLACK), Rook(BLACK)]
+
+    def knook_deck(self):
+        """Create a deck of pieces with the knook rules"""
+        self.white_pieces = [Rook(WHITE), Knight(WHITE), Bishop(WHITE), Chancellor(WHITE), King(WHITE), Bishop(WHITE), Knight(WHITE), Rook(WHITE)]
+        self.black_pieces = [Rook(BLACK), Knight(BLACK), Bishop(BLACK), Chancellor(BLACK), King(BLACK), Bishop(BLACK), Knight(BLACK), Rook(BLACK)]
 
     def is_castling_pieces_at_extremes(self, color: Color) -> bool:
         """The castling pieces must be at the extremes of the deck and nowhere else"""
