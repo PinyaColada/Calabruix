@@ -1,7 +1,3 @@
-[![Stargazers][stars-shield]][stars-url]
-[![Issues][issues-shield]][issues-url]
-[![MIT License][license-shield]][license-url]
-
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
@@ -15,7 +11,7 @@
     <br />
     <a href="https://github.com/PinyaColada/Deck-chess/tree/master/Source">View Source</a>
     ·
-    <a href="https://github.com/PinyaColada/Deck-chess/blob/master/Source/main.py">Report Bug</a>
+    <a href="https://github.com/PinyaColada/Deck-chess/blob/master/Source/main.py">View main.py</a>
     ·
     <a href="https://github.com/PinyaColada/Deck-chess/issues">Request Feature or Report Bug</a>
   </p>
