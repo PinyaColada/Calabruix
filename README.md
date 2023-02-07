@@ -4,7 +4,7 @@
   <h3 align="center">Deck-chess engine</h3>
 
   <p align="center">
-    An awesome chess engine for this general purpouse variant!
+    An awesome chess engine for this general purpouse variant
     <br />
     <a href="https://github.com/PinyaColada/Deck-chess"><strong>Explore the docs »</strong></a>
     <br />
@@ -20,11 +20,11 @@
 <!-- Deck-chess -->
 ## Deck-chess
 
-A chess engine for a deck-chess variation, the deck-chess variation it can transpose to a big number of chess variants.
+A chess engine for the deck-chess variant, the deck-chess variant it can transpose to a big number of diverse chess variants.
 
 The deck chess variation it makes you create:
 * Any regular style piece such as the chancellor or the archbishop
-* Inmortal pieces such as the duch
+* Inmortal pieces such as the duck
 * Pieces unable to capture like the frog
 
 This is a personal project that it will be used in my thesis
