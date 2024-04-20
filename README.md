@@ -1,7 +1,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <h3 align="center">Deck-chess engine</h3>
+  <h3 align="center">Calabruix deck-chess engine</h3>
 
   <p align="center">
     An awesome chess engine for this general purpouse variant
@@ -35,11 +35,10 @@ This is a personal project that it will be used in my thesis
 
 The engine has this features built-in:
 * All basic chess pieces + capablanca + invented by me
-* Pseudo legal moves generator
+* Really quick analisis using bitboards
 * Legal move generator
-* En passant
-* Castling
-* Promotion by default it promotes to your piece in your D file, the underpromotions is disabled by default
+* Special move definition (en passant, castling etc...)
 * Fen loader
+* ASCII display of the board
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
