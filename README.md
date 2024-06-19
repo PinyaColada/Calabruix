@@ -42,3 +42,12 @@ The engine has this features built-in:
 * ASCII display of the board
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Demo
+
+<div align="center">
+  <img src="https://github.com/PinyaColada/Calabruix/blob/master/demo/ChessEngineExample.gif" alt="Chess Engine Demo">
+  <p>playing a game!</p>
+</div>
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
