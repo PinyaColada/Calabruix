@@ -27,7 +27,7 @@ The deck chess variation it makes you create:
 * Inmortal pieces such as the duck
 * Pieces unable to capture like the frog
 
-This is a personal project that it will be used in my thesis
+This is a personal project that it was used in my [thesis](https://www.overleaf.com/read/mmtjvwkhhfsb#39014f).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -35,7 +35,7 @@ This is a personal project that it will be used in my thesis
 
 The engine has this features built-in:
 * All basic chess pieces + capablanca + invented by me
-* Really quick analisis using bitboards
+* Really quick analisis using bitboards/ magic bitboards
 * Legal move generator
 * Special move definition (en passant, castling etc...)
 * Fen loader
